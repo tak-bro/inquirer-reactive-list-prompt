@@ -1,0 +1,26 @@
+{
+  "name": "inquirer-changeable-list",
+  "version": "1.0.0",
+  "description": "inquirer prompt for changeable choices on list",
+  "main": "index.js",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "files": [
+    "/dist"
+  ],
+  "scripts": {
+    "build": "tsup src/index.ts --format cjs,esm --dts",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "inquirer",
+    "inquirer-dynamic-list"
+  ],
+  "author": "Hyungtak Jin",
+  "license": "MIT",
+  "devDependencies": {
+    "@changesets/cli": "^2.26.2",
+    "tsup": "^7.1.0",
+    "typescript": "^5.1.6"
+  }
+}
