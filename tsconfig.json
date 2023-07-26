@@ -1,6 +1,7 @@
 {
     "compileOnSave": false,
     "compilerOptions": {
+        "baseUrl": "./",
         "target": "es2015",
         "module": "commonjs",
         "esModuleInterop": true,
@@ -9,5 +10,6 @@
         "skipLibCheck": true,
         "skipDefaultLibCheck": true
     },
+    "include": ["src"],
     "exclude": ["node_modules", "tmp"]
 }
