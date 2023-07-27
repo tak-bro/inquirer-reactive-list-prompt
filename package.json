@@ -9,9 +9,14 @@
         "/dist"
     ],
     "scripts": {
-        "build": "tsup src/index.ts --format cjs,esm --dts",
+        "prepare": "husky install",
+        "clean": "rm -rf dist",
+        "build": "pnpm clean && tsup src/index.ts --format cjs,esm --dts",
         "release": "pnpm run build && changeset publish",
-        "test": "echo \"Error: no test specified\" && exit 1"
+        "test": "echo \"Error: no test specified\" && exit 1",
+        "fix:prettier": "prettier \"src/**/*.ts\" --write",
+        "fix:lint": "eslint src --ext .ts --fix",
+        "changeset": "npx changeset"
     },
     "keywords": [
         "inquirer",
@@ -21,6 +26,13 @@
     "license": "MIT",
     "devDependencies": {
         "@changesets/cli": "^2.26.2",
+        "@typescript-eslint/eslint-plugin": "^6.2.0",
+        "@typescript-eslint/parser": "^6.2.0",
+        "eslint": "^8.45.0",
+        "eslint-plugin-unused-imports": "^3.0.0",
+        "husky": "^8.0.0",
+        "lint-staged": "^13.2.3",
+        "prettier": "^3.0.0",
         "tsup": "^7.1.0",
         "typescript": "^5.1.6"
     }
