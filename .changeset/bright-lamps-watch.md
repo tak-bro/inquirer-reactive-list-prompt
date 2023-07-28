@@ -1,5 +1,5 @@
 ---
-"inquirer-changeable-list": patch
+'inquirer-changeable-list': patch
 ---
 
 init version

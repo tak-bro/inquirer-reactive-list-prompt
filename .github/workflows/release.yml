@@ -3,8 +3,11 @@ on:
     push:
         branches:
             - main
+
 concurrency: ${{ github.workflow }}-${{ github.ref }}
+
 permissions: {}
+
 jobs:
     release:
         # IMPORTANT: prevent this action from running on forks
@@ -29,5 +32,5 @@ jobs:
               with:
                   publish: pnpm run release
               env:
-                  GITHUB_TOKEN: ${{ secrets.GITHUB_WORKFLOW_TOKEN }}
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
                   NPM_TOKEN: ${{ secrets.NPM_TOKEN }}

@@ -1,39 +1,47 @@
 {
-    "name": "inquirer-changeable-list",
+    "name": "inquirer-mutable-list",
     "version": "1.0.0",
     "description": "inquirer prompt for changeable choices on list",
-    "main": "index.js",
-    "module": "dist/index.mjs",
-    "types": "dist/index.d.ts",
+    "exports": "./dist/index.js",
+    "types": "./dist/index.d.ts",
+    "type": "module",
     "files": [
-        "/dist"
+        "dist"
     ],
     "scripts": {
         "prepare": "husky install",
         "clean": "rm -rf dist",
-        "build": "pnpm clean && tsup src/index.ts --format cjs,esm --dts",
+        "build": "pnpm clean && tsup src/index.ts --format esm --dts",
         "release": "pnpm run build && changeset publish",
         "test": "echo \"Error: no test specified\" && exit 1",
         "fix:prettier": "prettier \"src/**/*.ts\" --write",
         "fix:lint": "eslint src --ext .ts --fix",
-        "changeset": "npx changeset"
+        "changeset": "npx changeset",
+        "pack:example": "pnpm build && pnpm pack && mv inquirer-mutable-list-1.0.0.tgz example"
     },
     "keywords": [
         "inquirer",
-        "inquirer-dynamic-list"
+        "inquirer-dynamic-list",
+        "inquirer-mutable-list"
     ],
     "author": "Hyungtak Jin",
     "license": "MIT",
     "devDependencies": {
         "@changesets/cli": "^2.26.2",
+        "@types/inquirer": "^9.0.3",
+        "@types/node": "^20.4.5",
         "@typescript-eslint/eslint-plugin": "^6.2.0",
         "@typescript-eslint/parser": "^6.2.0",
         "eslint": "^8.45.0",
         "eslint-plugin-unused-imports": "^3.0.0",
         "husky": "^8.0.0",
+        "inquirer": "^9.2.8",
         "lint-staged": "^13.2.3",
         "prettier": "^3.0.0",
         "tsup": "^7.1.0",
         "typescript": "^5.1.6"
+    },
+    "peerDependencies": {
+        "inquirer": "^9.0.3"
     }
 }
