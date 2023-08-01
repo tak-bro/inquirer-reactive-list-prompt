@@ -1,11 +1,8 @@
 {
-    "name": "ts-example",
+    "name": "inquirer-mutable-list-example",
     "version": "0.0.0",
     "main": "index.js",
     "type": "module",
-    "compilerOptions": {
-        "moduleResolution": "node"
-    },
     "scripts": {
         "test": "echo \"Error: no test specified\" && exit 1",
         "start": "tsc && node ./dist/index.js"
