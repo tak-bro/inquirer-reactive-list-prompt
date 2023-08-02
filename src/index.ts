@@ -1,79 +1,68 @@
 import chalk from 'chalk';
-import figures from 'figures';
 import cliCursor from 'cli-cursor';
-import type inquirer from 'inquirer';
-import { Answers, ListQuestionOptions } from 'inquirer';
+import type { Question } from 'inquirer';
+import inquirer, { Answers, ListQuestionOptions } from 'inquirer';
+import Choice from 'inquirer/lib/objects/choice.js';
 import Base from 'inquirer/lib/prompts/base.js';
 import observe from 'inquirer/lib/utils/events.js';
 import incrementListIndex from 'inquirer/lib/utils/incrementListIndex.js';
 import Paginator from 'inquirer/lib/utils/paginator.js';
 import { Ora } from 'ora';
 import { Interface as ReadLineInterface } from 'readline';
-import { Subject } from 'rxjs';
+import { Subject, Subscription } from 'rxjs';
 import { map, takeUntil } from 'rxjs/operators';
-
-export type Choice = any;
-
-const cleanUpList = (choices: any, choice: Choice) => {
-    return choices.filter((origin: Choice) => {
-        const { name, value } = choice;
-        if (!name || !value) {
-            return true;
-        }
-        return !(origin.name === name && origin.value === value);
-    });
-};
-
-export interface MutableListConfig {
-    emptyMessage?: string;
-    ora?: Ora;
-    choicesSubject?: Subject<any[]>;
-}
+import { cleanUpList, listRender } from './utils/index.js';
 
 declare module 'inquirer' {
     interface MutableListPromptOptions<T extends Answers = Answers> extends ListQuestionOptions<T> {}
-
     interface MutableListPrompt<T extends Answers = Answers> extends MutableListPromptOptions<T> {
         type: 'mutable-list';
+        addChoice$?: Subject<any>;
+        removeChoice$?: Subject<any>;
         emptyMessage?: string;
-        ora?: Ora;
-        choicesSubject?: Subject<any[]>;
+        pageSize?: number;
     }
-
     interface QuestionMap<T extends Answers = Answers> {
-        /**
-         * The `MutableListPrompt` type.
-         */
         mutableList: MutableListPrompt<T>;
-        run: any;
-        addChoice: any;
     }
 }
 
-export class MutableListPrompt extends Base<ListQuestionOptions & MutableListConfig> {
-    declare opt: inquirer.prompts.PromptOptions & { emptyMessage: string; ora: Ora; choicesSubject: Subject<any[]> };
+export class MutableListPrompt extends Base {
+    declare opt: inquirer.prompts.PromptOptions & {
+        addChoice$: Subject<any>;
+        removeChoice$: Subject<any>;
+        emptyMessage: string;
+        pageSize: number;
+    };
 
-    firstRender: boolean;
-    emptyMessage: string;
-    selected: number;
-    choicesSubject: Subject<any[]>;
-    // addChoice: any;
-    // removeChoice: any;
+    private firstRender: boolean = true;
+    private selected: number = 0;
+    private emptyMessage: string;
+    private addChoice$: Subject<Choice>;
+    private removeChoice$: Subject<Choice>;
     private done: (...args: any[]) => void;
     private spinner?: Ora;
-    private paginator: Paginator = new Paginator();
+    private paginator: Paginator;
+    private subscriptions: Subscription[];
 
-    constructor(question: ListQuestionOptions, readLine: ReadLineInterface, answers: Answers) {
+    constructor(question: Question, readLine: ReadLineInterface, answers: Answers) {
         super(question, readLine, answers);
-        this.opt.choices = this.opt.choices ?? [];
-        this.emptyMessage = this.opt.emptyMessage ?? 'No choices';
-        this.choicesSubject = this.opt.choicesSubject ?? new Subject();
 
-        this.selected = 0;
-        this.firstRender = true;
+        if (!this.opt.choices) {
+            this.throwParamError('choices');
+        }
+        if (!this.opt.addChoice$) {
+            this.throwParamError('addChoice$');
+        }
+        if (!this.opt.removeChoice$) {
+            this.throwParamError('removeChoice$');
+        }
+
+        this.emptyMessage = this.opt.emptyMessage ?? 'No choices';
+        this.addChoice$ = this.opt.addChoice$ ?? new Subject();
+        this.removeChoice$ = this.opt.removeChoice$ ?? new Subject();
 
         const def = this.opt.default;
-
         // If def is a Number, then use as index. Otherwise, check for value.
         if (typeof def === 'number' && def >= 0 && def < this.opt.choices.realLength) {
             this.selected = def;
@@ -83,7 +72,7 @@ export class MutableListPrompt extends Base<ListQuestionOptions & MutableListCon
         }
 
         this.opt.default = null;
-        const shouldLoop = this.opt.loop === undefined ? true : this.opt.loop;
+        const shouldLoop = this.opt['loop'] === undefined ? true : this.opt['loop'];
         this.paginator = new Paginator(this.screen, { isInfinite: shouldLoop });
     }
 
@@ -94,6 +83,11 @@ export class MutableListPrompt extends Base<ListQuestionOptions & MutableListCon
     }
 
     removeChoice(choice: Choice) {
+        const removedChoices = cleanUpList(this.opt.choices.choices, choice);
+        if (removedChoices.length === 0) {
+            this.render('At least one choice!');
+            return this;
+        }
         this.opt.choices.choices = cleanUpList(this.opt.choices.choices, choice);
         this.opt.choices.realChoices = cleanUpList(this.opt.choices.realChoices, choice);
         this.render();
@@ -102,12 +96,6 @@ export class MutableListPrompt extends Base<ListQuestionOptions & MutableListCon
 
     _run(cb) {
         this.done = cb;
-        // Init the prompt
-        this.addChoice.bind(this);
-        this.removeChoice.bind(this);
-        this.choicesSubject.subscribe(choice => {
-            this.addChoice(choice);
-        });
 
         const events = observe(this.rl);
         events.normalizedUpKey.pipe(takeUntil(events.line)).forEach(this.onUpKey.bind(this));
@@ -119,10 +107,18 @@ export class MutableListPrompt extends Base<ListQuestionOptions & MutableListCon
         validation.success.forEach(this.onSubmit.bind(this));
         validation.error.forEach(this.onError.bind(this));
 
+        const addChoiceSubscription = this.addChoice$.subscribe(this.addChoice.bind(this));
+        const removeChoiceSubscription = this.removeChoice$.subscribe(this.removeChoice.bind(this));
+        this.subscriptions = [addChoiceSubscription, removeChoiceSubscription];
+
         cliCursor.hide();
         this.render();
 
         return this;
+    }
+
+    unsubscribe() {
+        this.subscriptions?.forEach(sub => sub.unsubscribe());
     }
 
     render(error?: string) {
@@ -143,7 +139,7 @@ export class MutableListPrompt extends Base<ListQuestionOptions & MutableListCon
         const choicesStr = listRender(this.opt.choices, this.selected);
         const indexPosition = this.opt.choices.indexOf(this.opt.choices.getChoice(this.selected) as any);
         const realIndexPosition =
-            this.opt.choices.reduce((acc, value, i) => {
+            (this.opt.choices as any).reduce((acc, value, i) => {
                 // Dont count lines past the choice we are looking at
                 if (i > indexPosition) {
                     return acc;
@@ -184,6 +180,7 @@ export class MutableListPrompt extends Base<ListQuestionOptions & MutableListCon
 
         this.screen.done();
         cliCursor.show();
+        this.unsubscribe();
         this.done(value);
     }
 
@@ -220,80 +217,3 @@ export class MutableListPrompt extends Base<ListQuestionOptions & MutableListCon
         return this.opt.choices.length === 0;
     }
 }
-
-function listRender(choices, pointer) {
-    let output = '';
-    let separatorOffset = 0;
-
-    choices.forEach((choice, i) => {
-        if (choice.type === 'separator') {
-            separatorOffset++;
-            output += '  ' + choice + '\n';
-            return;
-        }
-
-        if (choice.disabled) {
-            separatorOffset++;
-            output += '  - ' + choice.name;
-            output += ` (${typeof choice.disabled === 'string' ? choice.disabled : 'Disabled'})`;
-            output += '\n';
-            return;
-        }
-
-        const isSelected = i - separatorOffset === pointer;
-        let line = (isSelected ? figures.pointer + ' ' : '  ') + choice.name;
-        if (isSelected) {
-            line = chalk.cyan(line);
-        }
-
-        output += line + ' \n';
-    });
-
-    return output.replace(/\n$/, '');
-}
-
-// export class MutableListPrompt extends Base<ListQuestionOptions & MutableListConfig> {
-//     private emptyMessage: string;
-//     private done: (...args: any[]) => void;
-//
-//     constructor(question: ListQuestionOptions, readLine: ReadLineInterface, answers: Answers) {
-//         super(question, readLine, answers);
-//         this.opt.choices = this.opt.choices ?? [];
-//         this.opt.default = null;
-//         this.emptyMessage = this.opt.emptyMessage ?? 'No choices';
-//     }
-//
-//     public addChoice(choice: Choice) {
-//         return this.opt.choices.push(choice);
-//     }
-//
-//     public removeChoice(choice: Choice) {
-//         this.opt.choices.choices = cleanUpList(this.opt.choices.choices, choice);
-//         return this.opt.choices.realChoices = cleanUpList(this.opt.choices.realChoices, choice);
-//     }
-//
-//     public render() {
-//         // return super.render(...arguments);
-//         const content = this.isEmptyChoices ? this.emptyMessage : this.getQuestion();
-//         return this.screen.render(content, '');
-//     }
-//
-//     run() {
-//         return new Promise((resolve, reject) => {
-//             // this.ui.close();
-//
-//         })
-//     }
-//
-//     // _run(cb: (...args: any[]) => void): MutableListPrompt {
-//     //     this.done = cb;
-//     //     this.render();
-//     //     this.addChoice.bind(this)
-//     //     console.log('this', this);
-//     //     return this;
-//     // }
-//
-//     private get isEmptyChoices() {
-//         return this.opt.choices.length === 0;
-//     }
-// }

@@ -1,21 +1,23 @@
 import inquirer from 'inquirer';
 import { MutableListPrompt } from 'inquirer-mutable-list';
 import { Subject } from 'rxjs';
+
 const choices$: Subject<any> = new Subject<any>();
-choices$.next([{ name: 'test', value: 'test' }]);
-inquirer.registerPrompt('mutable-list', MutableListPrompt as any);
-const mutableList: any = inquirer.prompt({
+
+inquirer.registerPrompt('mutable-list', MutableListPrompt);
+const mutableList = inquirer.prompt({
     type: 'mutable-list',
     name: 'test',
     message: 'Select AI message',
-    // emptyMessage: 'Nothing to show',
+    emptyMessage: 'Nothing to show',
     choices: [
         { name: 'test', value: 'test' },
         { name: 'tes1', value: 'tes6' },
         { name: 'tes2', value: 'tes5' },
         { name: 'tes3', value: 'tes4' },
     ],
-    choicesSubject: choices$,
+    addChoice$: choices$,
+    removeChoice$: choices$,
 });
 
 setTimeout(() => {
