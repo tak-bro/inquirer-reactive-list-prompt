@@ -617,7 +617,7 @@ packages:
     dev: true
 
   file:inquirer-mutable-list-1.0.0.tgz(inquirer@9.2.9):
-    resolution: {integrity: sha512-kzwUNTypCJM1UxZTxPGW+IrO33mgBueYWBDzI+qxlWe/RsN41WIopi9m+7DtTtaFlvt663/xhg5CmtjkMOMzrA==, tarball: file:inquirer-mutable-list-1.0.0.tgz}
+    resolution: {integrity: sha512-2+/oxfTCAQMuzqluHiAY7Fa3VL4kZwhN5wxLldQFSygGoNoiF4joLytw43bL0L1AcDxaEw6vjMpDcITZIOhG8Q==, tarball: file:inquirer-mutable-list-1.0.0.tgz}
     id: file:inquirer-mutable-list-1.0.0.tgz
     name: inquirer-mutable-list
     version: 1.0.0

@@ -3,25 +3,30 @@ import cliCursor from 'cli-cursor';
 import type { Question } from 'inquirer';
 import inquirer, { Answers, ListQuestionOptions } from 'inquirer';
 import Choice from 'inquirer/lib/objects/choice.js';
+import Choices from 'inquirer/lib/objects/choices.js';
 import Base from 'inquirer/lib/prompts/base.js';
 import observe from 'inquirer/lib/utils/events.js';
 import incrementListIndex from 'inquirer/lib/utils/incrementListIndex.js';
 import Paginator from 'inquirer/lib/utils/paginator.js';
 import { Ora } from 'ora';
 import { Interface as ReadLineInterface } from 'readline';
-import { Subject, Subscription } from 'rxjs';
+import { Subject, Subscription, take } from 'rxjs';
 import { map, takeUntil } from 'rxjs/operators';
 import { cleanUpList, listRender } from './utils/index.js';
 
 declare module 'inquirer' {
     interface MutableListPromptOptions<T extends Answers = Answers> extends ListQuestionOptions<T> {}
+
     interface MutableListPrompt<T extends Answers = Answers> extends MutableListPromptOptions<T> {
         type: 'mutable-list';
-        addChoice$?: Subject<any>;
-        removeChoice$?: Subject<any>;
-        emptyMessage?: string;
+        // fix for @types/inquirer
         pageSize?: number;
+        choices$?: Subject<Choices>;
+        emptyMessage?: string;
+        // addChoice$?: Subject<any>;
+        // removeChoice$?: Subject<any>;
     }
+
     interface QuestionMap<T extends Answers = Answers> {
         mutableList: MutableListPrompt<T>;
     }
@@ -29,38 +34,39 @@ declare module 'inquirer' {
 
 export class MutableListPrompt extends Base {
     declare opt: inquirer.prompts.PromptOptions & {
-        addChoice$: Subject<any>;
-        removeChoice$: Subject<any>;
-        emptyMessage: string;
         pageSize: number;
+        choices$: Subject<Choices>;
+        emptyMessage: string;
+        // addChoice$: Subject<any>;
+        // removeChoice$: Subject<any>;
     };
 
+    private emptyMessage: string;
+    private choices$: Subject<Choices>;
+    // TODO:
+    private spinner?: Ora;
     private firstRender: boolean = true;
     private selected: number = 0;
-    private emptyMessage: string;
-    private addChoice$: Subject<Choice>;
-    private removeChoice$: Subject<Choice>;
     private done: (...args: any[]) => void;
-    private spinner?: Ora;
     private paginator: Paginator;
     private subscriptions: Subscription[];
 
     constructor(question: Question, readLine: ReadLineInterface, answers: Answers) {
         super(question, readLine, answers);
-
-        if (!this.opt.choices) {
+        if (!this.opt.choices$ && !this.opt.choices) {
             this.throwParamError('choices');
         }
-        if (!this.opt.addChoice$) {
-            this.throwParamError('addChoice$');
+        if (this.opt.choices$) {
+            this.opt.choices$
+                .asObservable()
+                .pipe(take(1))
+                .subscribe((choices: any) => {
+                    this.opt.choices = new Choices(choices, answers);
+                });
         }
-        if (!this.opt.removeChoice$) {
-            this.throwParamError('removeChoice$');
-        }
-
+        // set choices
         this.emptyMessage = this.opt.emptyMessage ?? 'No choices';
-        this.addChoice$ = this.opt.addChoice$ ?? new Subject();
-        this.removeChoice$ = this.opt.removeChoice$ ?? new Subject();
+        this.choices$ = this.opt.choices$ ?? new Subject();
 
         const def = this.opt.default;
         // If def is a Number, then use as index. Otherwise, check for value.
@@ -94,6 +100,13 @@ export class MutableListPrompt extends Base {
         return this;
     }
 
+    setChoices(choices: any) {
+        this.opt.choices.choices = choices;
+        this.opt.choices.realChoices = choices;
+        this.render();
+        return this;
+    }
+
     _run(cb) {
         this.done = cb;
 
@@ -107,9 +120,11 @@ export class MutableListPrompt extends Base {
         validation.success.forEach(this.onSubmit.bind(this));
         validation.error.forEach(this.onError.bind(this));
 
-        const addChoiceSubscription = this.addChoice$.subscribe(this.addChoice.bind(this));
-        const removeChoiceSubscription = this.removeChoice$.subscribe(this.removeChoice.bind(this));
-        this.subscriptions = [addChoiceSubscription, removeChoiceSubscription];
+        // const addChoiceSubscription = this.addChoice$.subscribe(this.addChoice.bind(this));
+        // const removeChoiceSubscription = this.removeChoice$.subscribe(this.removeChoice.bind(this));
+        // this.subscriptions = [addChoiceSubscription, removeChoiceSubscription];
+        const choicesSubscription = this.choices$.subscribe(this.setChoices.bind(this));
+        this.subscriptions = [choicesSubscription];
 
         cliCursor.hide();
         this.render();
@@ -214,6 +229,9 @@ export class MutableListPrompt extends Base {
     }
 
     private get isEmptyChoices() {
+        if (!this.opt.choices) {
+            return true;
+        }
         return this.opt.choices.length === 0;
     }
 }
