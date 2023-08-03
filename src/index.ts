@@ -2,29 +2,32 @@ import chalk from 'chalk';
 import cliCursor from 'cli-cursor';
 import type { Question } from 'inquirer';
 import inquirer, { Answers, ListQuestionOptions } from 'inquirer';
-import Choice from 'inquirer/lib/objects/choice.js';
 import Choices from 'inquirer/lib/objects/choices.js';
 import Base from 'inquirer/lib/prompts/base.js';
 import observe from 'inquirer/lib/utils/events.js';
 import incrementListIndex from 'inquirer/lib/utils/incrementListIndex.js';
 import Paginator from 'inquirer/lib/utils/paginator.js';
-import { Ora } from 'ora';
+import ora, { Ora } from 'ora';
 import { Interface as ReadLineInterface } from 'readline';
-import { Subject, Subscription, take } from 'rxjs';
+import { BehaviorSubject, Subscription, take } from 'rxjs';
 import { map, takeUntil } from 'rxjs/operators';
-import { cleanUpList, listRender } from './utils/index.js';
+import { listRender } from './utils/index.js';
+
+export interface MutableListLoader {
+    isLoading: boolean;
+    message?: string;
+}
 
 declare module 'inquirer' {
     interface MutableListPromptOptions<T extends Answers = Answers> extends ListQuestionOptions<T> {}
 
     interface MutableListPrompt<T extends Answers = Answers> extends MutableListPromptOptions<T> {
         type: 'mutable-list';
+        choices$?: BehaviorSubject<Choices>;
+        loader$?: BehaviorSubject<MutableListLoader>;
+        emptyMessage?: string;
         // fix for @types/inquirer
         pageSize?: number;
-        choices$?: Subject<Choices>;
-        emptyMessage?: string;
-        // addChoice$?: Subject<any>;
-        // removeChoice$?: Subject<any>;
     }
 
     interface QuestionMap<T extends Answers = Answers> {
@@ -35,16 +38,17 @@ declare module 'inquirer' {
 export class MutableListPrompt extends Base {
     declare opt: inquirer.prompts.PromptOptions & {
         pageSize: number;
-        choices$: Subject<Choices>;
+        choices$: BehaviorSubject<Choices>;
+        loader$: BehaviorSubject<MutableListLoader>;
         emptyMessage: string;
-        // addChoice$: Subject<any>;
-        // removeChoice$: Subject<any>;
     };
 
     private emptyMessage: string;
-    private choices$: Subject<Choices>;
-    // TODO:
+    private loader$: BehaviorSubject<MutableListLoader>;
+    private choices$: BehaviorSubject<Choices>;
     private spinner?: Ora;
+    private isLoading: boolean = false;
+
     private firstRender: boolean = true;
     private selected: number = 0;
     private done: (...args: any[]) => void;
@@ -56,17 +60,14 @@ export class MutableListPrompt extends Base {
         if (!this.opt.choices$ && !this.opt.choices) {
             this.throwParamError('choices');
         }
-        if (this.opt.choices$) {
-            this.opt.choices$
-                .asObservable()
-                .pipe(take(1))
-                .subscribe((choices: any) => {
-                    this.opt.choices = new Choices(choices, answers);
-                });
-        }
-        // set choices
+
         this.emptyMessage = this.opt.emptyMessage ?? 'No choices';
-        this.choices$ = this.opt.choices$ ?? new Subject();
+        if (this.opt.choices$) {
+            this.initChoices(answers);
+        }
+        if (this.opt.loader$) {
+            this.initLoader();
+        }
 
         const def = this.opt.default;
         // If def is a Number, then use as index. Otherwise, check for value.
@@ -82,27 +83,45 @@ export class MutableListPrompt extends Base {
         this.paginator = new Paginator(this.screen, { isInfinite: shouldLoop });
     }
 
-    addChoice(choice: Choice) {
-        this.opt.choices.push(choice);
-        this.render();
-        return this;
-    }
+    setLoader(loader: MutableListLoader) {
+        const { message, isLoading } = loader;
+        if (!this.spinner) {
+            return;
+        }
+        if (this.isLoading === isLoading) {
+            // do nothing
+            return;
+        }
+        this.isLoading = isLoading;
+        if (!this.isLoading) {
+            // this.spinner.indent = 0;
+            this.spinner.text = `${chalk.bold(chalk.green(message))}`;
+            // this.spinner.suffixText = `${chalk.bold(chalk.green(message))}`;
 
-    removeChoice(choice: Choice) {
-        const removedChoices = cleanUpList(this.opt.choices.choices, choice);
-        if (removedChoices.length === 0) {
-            this.render('At least one choice!');
+            // this.spinner.stopAndPersist({
+            //     symbol: "✨",
+            //     text: `${chalk.bold(chalk.green(message))}`
+            // })
+
+            this.spinner.spinner = { interval: 0, frames: ['✨'] };
+
             return this;
         }
-        this.opt.choices.choices = cleanUpList(this.opt.choices.choices, choice);
-        this.opt.choices.realChoices = cleanUpList(this.opt.choices.realChoices, choice);
-        this.render();
+        if (this.spinner.isSpinning) {
+            return this;
+        }
+        this.spinner.start();
+        // this.render('AI is analyzing...')
         return this;
     }
 
     setChoices(choices: any) {
-        this.opt.choices.choices = choices;
-        this.opt.choices.realChoices = choices;
+        const hasNoChoices = !choices || choices.length === 0;
+        if (hasNoChoices) {
+            this.opt.choices = new Choices([], this.answers);
+            return;
+        }
+        this.opt.choices = new Choices(choices, this.answers);
         this.render();
         return this;
     }
@@ -125,6 +144,10 @@ export class MutableListPrompt extends Base {
         // this.subscriptions = [addChoiceSubscription, removeChoiceSubscription];
         const choicesSubscription = this.choices$.subscribe(this.setChoices.bind(this));
         this.subscriptions = [choicesSubscription];
+        if (this.loader$) {
+            const loaderSubscription = this.loader$.subscribe(this.setLoader.bind(this));
+            this.subscriptions.push(loaderSubscription);
+        }
 
         cliCursor.hide();
         this.render();
@@ -138,7 +161,6 @@ export class MutableListPrompt extends Base {
 
     render(error?: string) {
         if (this.isEmptyChoices) {
-            console.log('isEmptyChoices', this.isEmptyChoices);
             return this.screen.render(this.opt.emptyMessage, '');
         }
 
@@ -181,7 +203,11 @@ export class MutableListPrompt extends Base {
         }
 
         this.firstRender = false;
-        this.screen.render(message, bottomContent);
+        if (this.loader$) {
+            this.screen.render(`${message}\n`, bottomContent);
+            return;
+        }
+        this.screen.render(`${message}`, bottomContent);
     }
 
     onSubmit(value) {
@@ -193,9 +219,14 @@ export class MutableListPrompt extends Base {
         // Rerender prompt
         this.render();
 
+        if (this.spinner) {
+            this.spinner.isSpinning && this.spinner.stop();
+            this.spinner.clear();
+        }
+
+        this.unsubscribe();
         this.screen.done();
         cliCursor.show();
-        this.unsubscribe();
         this.done(value);
     }
 
@@ -211,16 +242,25 @@ export class MutableListPrompt extends Base {
     }
 
     onUpKey() {
+        if (this.isEmptyChoices) {
+            return;
+        }
         this.selected = incrementListIndex(this.selected, 'up', this.opt);
         this.render();
     }
 
     onDownKey() {
+        if (this.isEmptyChoices) {
+            return;
+        }
         this.selected = incrementListIndex(this.selected, 'down', this.opt);
         this.render();
     }
 
     onNumberKey(input) {
+        if (this.isEmptyChoices) {
+            return;
+        }
         if (input <= this.opt.choices.realLength) {
             this.selected = input - 1;
         }
@@ -233,5 +273,31 @@ export class MutableListPrompt extends Base {
             return true;
         }
         return this.opt.choices.length === 0;
+    }
+
+    private initChoices(answers: Answers) {
+        this.choices$ = this.opt.choices$;
+        this.opt.choices$
+            .asObservable()
+            .pipe(take(1))
+            .subscribe((choices: any) => {
+                const hasNoChoices = !choices || choices.length === 0;
+                if (hasNoChoices) {
+                    this.opt.choices = new Choices([], answers);
+                    return;
+                }
+                this.opt.choices = new Choices(choices, answers);
+            });
+    }
+
+    private initLoader() {
+        this.loader$ = this.opt.loader$;
+        this.loader$
+            .asObservable()
+            .pipe(take(1))
+            .subscribe(loader => {
+                this.spinner = ora({ text: loader.message });
+                this.isLoading = loader.isLoading;
+            });
     }
 }

@@ -1,9 +1,13 @@
 import inquirer from 'inquirer';
-import { MutableListPrompt } from 'inquirer-mutable-list';
+import { MutableListLoader, MutableListPrompt } from 'inquirer-mutable-list';
 import Choices from 'inquirer/lib/objects/choices.js';
-import { Subject } from 'rxjs';
+import { BehaviorSubject } from 'rxjs';
 
-const choices$: Subject<any> = new Subject<Choices>();
+const choices$: BehaviorSubject<Choices> = new BehaviorSubject<Choices>([] as any);
+const loader$: BehaviorSubject<MutableListLoader> = new BehaviorSubject<MutableListLoader>({
+    isLoading: false,
+    message: 'AI is analyzing...',
+});
 
 inquirer.registerPrompt('mutable-list', MutableListPrompt);
 const mutableList = inquirer.prompt({
@@ -12,48 +16,32 @@ const mutableList = inquirer.prompt({
     message: 'Select AI message',
     emptyMessage: 'Nothing to show',
     choices$,
+    loader$,
+});
+
+mutableList.then((answer: any) => {
+    choices$.complete();
+    loader$.complete();
+    console.log('answer: ', answer);
 });
 
 setTimeout(() => {
+    loader$.next({ isLoading: true });
     choices$.next([
         { name: 'test1', value: 'test1' },
         { name: 'test2', value: 'test2' },
         { name: 'test3', value: 'test3', disabled: true },
-    ]);
+    ] as any);
 }, 2000);
-
-mutableList.then((answer: any) => {
-    console.log('123', answer);
-});
 
 setTimeout(() => {
     choices$.next([
-        { name: 'tes2', value: 'tes5' },
-        { name: 'tes3', value: 'tes4' },
-    ]);
+        { name: 'test4', value: 'test4' },
+        { name: 'test5', value: 'test5', disabled: true },
+        { name: 'test6', value: 'test6' },
+    ] as any);
 }, 5000);
-//
-// const mutableList2 =  inquirer.prompt({
-//     type: 'mutable-list',
-//     name: 'test',
-//     message: 'Select AI message',
-//     emptyMessage: 'Nothing to show',
-//     choices: [],
-// });
-// mutableList2.then((answer: any) => {
-//     console.log('123', answer);
-// })
-//
-// const mutable = new MutableListPrompt({
-//     type: 'mutable-list',
-//     name: 'test',
-//     message: 'Select AI message',
-//     // emptyMessage: 'Nothing to show',
-//     choices: [{name: 'test', value: 'test' }],
-// })
-// mutable.addChoice({name: 'test1', value: 'test2'});
-// mutable.run().then((answer: any) => {
-//     console.log('123', answer);
-// })
-// // mutableList.addChoice({name: 'testr1', value: 'testr3'});
-// // mutableList.addChoice({name: 'testr2', value: 'testr4'});
+
+setTimeout(() => {
+    loader$.next({ isLoading: false, message: 'AI is analyzed' });
+}, 5500);
