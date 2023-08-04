@@ -8,9 +8,9 @@ dependencies:
   inquirer:
     specifier: ^9.0.3
     version: 9.2.9
-  inquirer-mutable-list:
-    specifier: file:inquirer-mutable-list-1.0.0.tgz
-    version: file:inquirer-mutable-list-1.0.0.tgz(inquirer@9.2.9)
+  inquirer-reactive-list-prompt:
+    specifier: file:inquirer-reactive-list-prompt-1.0.0.tgz
+    version: file:inquirer-reactive-list-prompt-1.0.0.tgz(inquirer@9.2.9)
 
 devDependencies:
   '@types/inquirer':
@@ -616,10 +616,10 @@ packages:
     engines: {node: '>=6'}
     dev: true
 
-  file:inquirer-mutable-list-1.0.0.tgz(inquirer@9.2.9):
-    resolution: {integrity: sha512-K42CmOW/wFAHmIFKNrTm7R4KRe6X44b6CCv/lzt443l9n2vQTYiptipsOqfj+x42mR3x47D/zWoCzfHck6uaKg==, tarball: file:inquirer-mutable-list-1.0.0.tgz}
-    id: file:inquirer-mutable-list-1.0.0.tgz
-    name: inquirer-mutable-list
+  file:inquirer-reactive-list-prompt-1.0.0.tgz(inquirer@9.2.9):
+    resolution: {integrity: sha512-mlTSJv09RtSl3Fvq9xtxDDk8PyqykoN+KDUJLfDKcj86wDLm/4P7sq+twK9YWENkl+JxD4GSI1xBJgw17IUbdQ==, tarball: file:inquirer-reactive-list-prompt-1.0.0.tgz}
+    id: file:inquirer-reactive-list-prompt-1.0.0.tgz
+    name: inquirer-reactive-list-prompt
     version: 1.0.0
     peerDependencies:
       inquirer: ^9.0.3
@@ -629,6 +629,5 @@ packages:
       figures: 5.0.0
       inquirer: 9.2.9
       ora: 7.0.1
-      run-async: 3.0.0
       rxjs: 7.8.1
     dev: false

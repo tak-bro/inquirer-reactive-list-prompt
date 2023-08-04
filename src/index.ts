@@ -18,6 +18,11 @@ export interface MutableListLoader {
     message?: string;
 }
 
+// declare module "inquirer-reactive-list-prompt" {
+//     let MutableListPrompt: PromptModule;
+//     export = MutableListPrompt;
+// }
+
 declare module 'inquirer' {
     interface MutableListPromptOptions<T extends Answers = Answers> extends ListQuestionOptions<T> {}
 

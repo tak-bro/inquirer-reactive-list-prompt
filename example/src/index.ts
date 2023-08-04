@@ -1,5 +1,5 @@
 import inquirer from 'inquirer';
-import { MutableListLoader, MutableListPrompt } from 'inquirer-mutable-list';
+import { MutableListLoader, MutableListPrompt } from 'inquirer-reactive-list-prompt';
 import Choices from 'inquirer/lib/objects/choices.js';
 import { BehaviorSubject } from 'rxjs';
 
@@ -29,6 +29,7 @@ setTimeout(() => {
     loader$.next({ isLoading: true });
     choices$.next([
         { name: 'test1', value: 'test1' },
+        new inquirer.Separator(),
         { name: 'test2', value: 'test2' },
         { name: 'test3', value: 'test3', disabled: true },
     ] as any);

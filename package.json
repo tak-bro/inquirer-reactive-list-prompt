@@ -1,5 +1,5 @@
 {
-    "name": "inquirer-mutable-list",
+    "name": "inquirer-reactive-list-prompt",
     "version": "1.0.0",
     "description": "inquirer prompt for changeable choices on list",
     "exports": "./dist/index.js",
@@ -17,13 +17,14 @@
         "fix:prettier": "prettier \"src/**/*.ts\" --write",
         "fix:lint": "eslint src --ext .ts --fix",
         "changeset": "npx changeset",
-        "pack:example": "pnpm build && pnpm pack && mv inquirer-mutable-list-1.0.0.tgz example",
+        "pack:example": "pnpm build && pnpm pack && mv inquirer-reactive-list-prompt-1.0.0.tgz example",
         "postpack:example": "cd example && pnpm install && pnpm start"
     },
     "keywords": [
         "inquirer",
         "inquirer-dynamic-list",
-        "inquirer-mutable-list"
+        "inquirer-reactive-list",
+        "inquirer-reactive-list-prompt"
     ],
     "author": "Hyungtak Jin",
     "license": "MIT",
