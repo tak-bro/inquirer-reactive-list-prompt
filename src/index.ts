@@ -18,39 +18,59 @@ export interface MutableListLoader {
     message?: string;
 }
 
-// declare module "inquirer-reactive-list-prompt" {
-//     let MutableListPrompt: PromptModule;
-//     export = MutableListPrompt;
+export type ReactiveListChoice = any;
+//
+// export interface ReactiveListPromptQuestionOptions<T extends Answers = Answers> extends Question<T> {
+//     type: "reactiveListPrompt";
+//     pageSize?: number;
+//     choices$?: BehaviorSubject<ReactiveListChoice[]>;
+//     loader$?: BehaviorSubject<MutableListLoader>;
+//     emptyMessage?: string;
+// }
+
+// declare module 'inquirer' {
+//     interface QuestionMap<T> {
+//         reactiveListPrompt: ReactiveListPromptQuestionOptions;
+//     }
 // }
 
 declare module 'inquirer' {
     interface MutableListPromptOptions<T extends Answers = Answers> extends ListQuestionOptions<T> {}
 
-    interface MutableListPrompt<T extends Answers = Answers> extends MutableListPromptOptions<T> {
-        type: 'mutable-list';
-        choices$?: BehaviorSubject<Choices>;
+    // interface MutableListPrompt<T extends Answers = Answers> extends MutableListPromptOptions<T> {
+    //     type: 'reactiveListPrompt';
+    //     choices$?: BehaviorSubject<ReactiveListChoice[]>;
+    //     loader$?: BehaviorSubject<MutableListLoader>;
+    //     emptyMessage?: string;
+    //     // fix for @types/inquirer
+    //     pageSize?: number;
+    // }
+
+    interface ReactiveListPromptQuestionOptions<T extends Answers = Answers> extends Question<T> {
+        type: 'reactiveListPrompt';
+        pageSize?: number;
+        choices$?: BehaviorSubject<ReactiveListChoice[]>;
         loader$?: BehaviorSubject<MutableListLoader>;
         emptyMessage?: string;
-        // fix for @types/inquirer
-        pageSize?: number;
     }
 
     interface QuestionMap<T extends Answers = Answers> {
-        mutableList: MutableListPrompt<T>;
+        reactiveListPrompt: ReactiveListPromptQuestionOptions<T>;
+        // mutableList: MutableListPrompt<T>;
     }
 }
 
-export class MutableListPrompt extends Base {
+class ReactiveListPrompt<T extends Answers> extends Base {
     declare opt: inquirer.prompts.PromptOptions & {
         pageSize: number;
-        choices$: BehaviorSubject<Choices>;
+        choices$: BehaviorSubject<ReactiveListChoice[]>;
         loader$: BehaviorSubject<MutableListLoader>;
         emptyMessage: string;
     };
 
     private emptyMessage: string;
     private loader$: BehaviorSubject<MutableListLoader>;
-    private choices$: BehaviorSubject<Choices>;
+    private choices$: BehaviorSubject<ReactiveListChoice[]>;
     private spinner?: Ora;
     private isLoading: boolean = false;
 
@@ -120,13 +140,13 @@ export class MutableListPrompt extends Base {
         return this;
     }
 
-    setChoices(choices: any) {
+    setChoices(choices: ReactiveListChoice[]) {
         const hasNoChoices = !choices || choices.length === 0;
         if (hasNoChoices) {
-            this.opt.choices = new Choices([], this.answers);
+            this.opt.choices = new Choices([], this.answers) as any;
             return;
         }
-        this.opt.choices = new Choices(choices, this.answers);
+        this.opt.choices = new Choices(choices, this.answers) as any;
         this.render();
         return this;
     }
@@ -285,7 +305,7 @@ export class MutableListPrompt extends Base {
         this.opt.choices$
             .asObservable()
             .pipe(take(1))
-            .subscribe((choices: any) => {
+            .subscribe((choices: ReactiveListChoice[]) => {
                 const hasNoChoices = !choices || choices.length === 0;
                 if (hasNoChoices) {
                     this.opt.choices = new Choices([], answers);
@@ -306,3 +326,5 @@ export class MutableListPrompt extends Base {
             });
     }
 }
+
+export default ReactiveListPrompt;

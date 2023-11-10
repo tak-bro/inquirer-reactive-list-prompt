@@ -1,17 +1,16 @@
 import inquirer from 'inquirer';
-import { MutableListLoader, MutableListPrompt } from 'inquirer-reactive-list-prompt';
-import Choices from 'inquirer/lib/objects/choices.js';
+import ReactiveListPrompt, { MutableListLoader, ReactiveListChoice } from 'inquirer-reactive-list-prompt';
 import { BehaviorSubject } from 'rxjs';
 
-const choices$: BehaviorSubject<Choices> = new BehaviorSubject<Choices>([] as any);
+const choices$: BehaviorSubject<ReactiveListChoice[]> = new BehaviorSubject<ReactiveListChoice[]>([]);
 const loader$: BehaviorSubject<MutableListLoader> = new BehaviorSubject<MutableListLoader>({
     isLoading: false,
     message: 'AI is analyzing...',
 });
 
-inquirer.registerPrompt('mutable-list', MutableListPrompt);
+inquirer.registerPrompt('reactiveListPrompt', ReactiveListPrompt);
 const mutableList = inquirer.prompt({
-    type: 'mutable-list',
+    type: 'reactiveListPrompt',
     name: 'test',
     message: 'Select AI message',
     emptyMessage: 'Nothing to show',
@@ -32,7 +31,7 @@ setTimeout(() => {
         new inquirer.Separator(),
         { name: 'test2', value: 'test2' },
         { name: 'test3', value: 'test3', disabled: true },
-    ] as any);
+    ]);
 }, 2000);
 
 setTimeout(() => {
@@ -40,7 +39,7 @@ setTimeout(() => {
         { name: 'test4', value: 'test4' },
         { name: 'test5', value: 'test5', disabled: true },
         { name: 'test6', value: 'test6' },
-    ] as any);
+    ]);
 }, 5000);
 
 setTimeout(() => {
