@@ -3,12 +3,15 @@ on:
     push:
         branches:
             - main
+
 concurrency: ${{ github.workflow }}-${{ github.ref }}
+
 permissions: {}
+
 jobs:
     release:
         # IMPORTANT: prevent this action from running on forks
-        if: github.repository == 'tak-bro/inquirer-changeable-list'
+        if: github.repository == 'tak-bro/inquirer-reactive-list'
         permissions:
             contents: write
             pull-requests: write
@@ -29,5 +32,5 @@ jobs:
               with:
                   publish: pnpm run release
               env:
-                  GITHUB_TOKEN: ${{ secrets.GITHUB_WORKFLOW_TOKEN }}
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
                   NPM_TOKEN: ${{ secrets.NPM_TOKEN }}

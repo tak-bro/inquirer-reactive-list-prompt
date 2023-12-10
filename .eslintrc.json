@@ -5,8 +5,10 @@
     "globals": { "BigInt": true, "console": true, "WebAssembly": true },
     "rules": {
         "no-unused-vars": "off",
+        "@typescript-eslint/no-explicit-any": "off",
         "curly": "error",
         "unused-imports/no-unused-imports": "error",
+        "@typescript-eslint/no-unused-vars": "off",
         "sort-imports": ["error", { "ignoreDeclarationSort": true, "ignoreCase": true }]
     }
 }

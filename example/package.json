@@ -1,0 +1,24 @@
+{
+    "name": "inquirer-reactive-list-example",
+    "version": "0.0.0",
+    "main": "index.js",
+    "type": "module",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1",
+        "start": "tsc && node ./dist/index.js"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "devDependencies": {
+        "@types/inquirer": "^9.0.3",
+        "@types/node": "^20.4.5",
+        "ts-node": "^10.9.1",
+        "tsconfig-paths": "^4.2.0",
+        "typescript": "^5.1.6"
+    },
+    "dependencies": {
+        "inquirer": "^9.0.3",
+        "inquirer-reactive-list-prompt": "file:inquirer-reactive-list-prompt-1.0.0.tgz"
+    }
+}
