@@ -7,18 +7,25 @@ import Base from 'inquirer/lib/prompts/base.js';
 import observe from 'inquirer/lib/utils/events.js';
 import incrementListIndex from 'inquirer/lib/utils/incrementListIndex.js';
 import Paginator from 'inquirer/lib/utils/paginator.js';
-import ora, { Ora } from 'ora';
+import ora, { Options, Ora } from 'ora';
 import { Interface as ReadLineInterface } from 'readline';
 import { BehaviorSubject, Subscription, take } from 'rxjs';
 import { map, takeUntil } from 'rxjs/operators';
 import { listRender } from './utils/index.js';
 
-export interface MutableListLoader {
-    isLoading: boolean;
-    message?: string;
+export interface StopSpinnerOption {
     doneFrame?: string;
+    color?: 'black' | 'green' | 'red' | 'yellow' | 'blue' | 'cyan' | 'white';
 }
 
+export interface ReactiveListLoader {
+    isLoading: boolean;
+    message?: string;
+    startOption?: Options;
+    stopOption?: StopSpinnerOption;
+}
+
+// NOTE: type error on inquirer
 export type ReactiveListChoice = any;
 //
 // export interface ReactiveListPromptQuestionOptions<T extends Answers = Answers> extends Question<T> {
@@ -51,7 +58,7 @@ declare module 'inquirer' {
         type: 'reactiveListPrompt';
         pageSize?: number;
         choices$?: BehaviorSubject<ReactiveListChoice[]>;
-        loader$?: BehaviorSubject<MutableListLoader>;
+        loader$?: BehaviorSubject<ReactiveListLoader>;
         emptyMessage?: string;
     }
 
@@ -65,16 +72,19 @@ class ReactiveListPrompt<T extends Answers> extends Base {
     declare opt: inquirer.prompts.PromptOptions & {
         pageSize: number;
         choices$: BehaviorSubject<ReactiveListChoice[]>;
-        loader$: BehaviorSubject<MutableListLoader>;
+        loader$: BehaviorSubject<ReactiveListLoader>;
         emptyMessage: string;
     };
 
     private emptyMessage: string;
-    private loader$: BehaviorSubject<MutableListLoader>;
+    private loader$: BehaviorSubject<ReactiveListLoader>;
     private choices$: BehaviorSubject<ReactiveListChoice[]>;
     private spinner?: Ora;
     private isLoading: boolean = false;
-    private doneFrame: string = '✨';
+    private stopOption: StopSpinnerOption = {
+        doneFrame: '✔',
+        color: 'green',
+    };
 
     private firstRender: boolean = true;
     private selected: number = 0;
@@ -110,19 +120,21 @@ class ReactiveListPrompt<T extends Answers> extends Base {
         this.paginator = new Paginator(this.screen, { isInfinite: shouldLoop });
     }
 
-    setLoader(loader: MutableListLoader) {
-        const { message, isLoading } = loader;
+    setLoader(loader: ReactiveListLoader) {
+        const { isLoading, message } = loader;
         if (!this.spinner) {
             return;
         }
+        // do nothing
         if (this.isLoading === isLoading) {
-            // do nothing
             return;
         }
+
         this.isLoading = isLoading;
+        this.stopOption = loader.stopOption ? { ...this.stopOption, ...loader.stopOption } : this.stopOption;
         if (!this.isLoading) {
             // this.spinner.indent = 0;
-            this.spinner.text = `${chalk.bold(chalk.green(message))}`;
+            this.spinner.text = `${chalk.bold(chalk[this.stopOption.color](message))}`;
             // this.spinner.suffixText = `${chalk.bold(chalk.green(message))}`;
 
             // this.spinner.stopAndPersist({
@@ -130,8 +142,8 @@ class ReactiveListPrompt<T extends Answers> extends Base {
             //     text: `${chalk.bold(chalk.green(message))}`
             // })
 
-            this.spinner.spinner = { interval: 0, frames: [this.doneFrame] };
-
+            this.spinner.color = this.stopOption.color;
+            this.spinner.spinner = { interval: 0, frames: [this.stopOption.doneFrame] };
             return this;
         }
         if (this.spinner.isSpinning) {
@@ -323,9 +335,14 @@ class ReactiveListPrompt<T extends Answers> extends Base {
             .asObservable()
             .pipe(take(1))
             .subscribe(loader => {
-                this.spinner = ora({ text: loader.message });
                 this.isLoading = loader.isLoading;
-                this.doneFrame = loader.doneFrame || this.doneFrame || '✨';
+                // set start ora option
+                const text = 'Loading...';
+                this.spinner = loader.startOption ? ora({ text, ...loader.startOption }) : ora({ text });
+
+                if (loader.stopOption) {
+                    this.stopOption = { ...this.stopOption, ...loader.stopOption };
+                }
             });
     }
 }

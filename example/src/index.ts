@@ -1,12 +1,19 @@
 import inquirer from 'inquirer';
-import ReactiveListPrompt, { MutableListLoader, ReactiveListChoice } from 'inquirer-reactive-list-prompt';
+import ReactiveListPrompt, { ReactiveListChoice, ReactiveListLoader } from 'inquirer-reactive-list';
 import { BehaviorSubject } from 'rxjs';
 
 const choices$: BehaviorSubject<ReactiveListChoice[]> = new BehaviorSubject<ReactiveListChoice[]>([]);
-const loader$: BehaviorSubject<MutableListLoader> = new BehaviorSubject<MutableListLoader>({
+const loader$: BehaviorSubject<ReactiveListLoader> = new BehaviorSubject<ReactiveListLoader>({
     isLoading: false,
     message: 'AI is analyzing...',
-    doneFrame: 'D',
+    // startOption: {
+    //     color: 'red',
+    //     spinner: 'triangle'
+    // },
+    // stopOption: {
+    //     doneFrame: '✖',
+    //     color: 'red'
+    // }
 });
 
 inquirer.registerPrompt('reactiveListPrompt', ReactiveListPrompt);
@@ -39,10 +46,17 @@ setTimeout(() => {
     choices$.next([
         { name: 'test4', value: 'test4' },
         { name: 'test5', value: 'test5', disabled: true },
-        { name: 'test6', value: 'test6' },
+        { name: 'test6', value: 'test6', disabled: true, isError: true },
     ]);
 }, 5000);
 
 setTimeout(() => {
-    loader$.next({ isLoading: false, message: 'AI is analyzed' });
-}, 5500);
+    loader$.next({
+        isLoading: false,
+        message: 'AI is analyzed',
+        // stopOption: {
+        //     doneFrame: '⚠', // '✖'
+        //     color: 'yellow' // 'red'
+        // }
+    });
+}, 6000);

@@ -1,5 +1,5 @@
 {
-    "name": "inquirer-reactive-list-prompt",
+    "name": "inquirer-reactive-list",
     "version": "1.0.0",
     "description": "inquirer prompt for changeable choices on list",
     "exports": "./dist/index.js",
@@ -18,7 +18,7 @@
         "fix:lint": "eslint src --ext .ts --fix",
         "changeset": "npx changeset",
         "changeset:version": "npx changeset version",
-        "pack:example": "pnpm build && pnpm pack && mv inquirer-reactive-list-prompt-1.0.0.tgz example",
+        "pack:example": "pnpm build && pnpm pack && mv inquirer-reactive-list-1.0.0.tgz example",
         "postpack:example": "cd example && pnpm install && pnpm start"
     },
     "keywords": [

@@ -15,9 +15,16 @@ export function listRender(choices: Choices, pointer: number) {
 
         if (choice.disabled) {
             separatorOffset++;
-            output += chalk.dim(
-                `  ${choice.name}  (${typeof choice.disabled === 'string' ? choice.disabled : 'Disabled'})`
-            );
+
+            if (choice.isError) {
+                output += chalk.dim(
+                    chalk.red(`  ${choice.name}  (${typeof choice.isError === 'string' ? choice.isError : 'Error'})`)
+                );
+            } else {
+                output += chalk.dim(
+                    `  ${choice.name}  (${typeof choice.disabled === 'string' ? choice.disabled : 'Disabled'})`
+                );
+            }
             // output += '  - ' + choice.name;
             // output += ` (${typeof choice.disabled === 'string' ? choice.disabled : 'Disabled'})`;
             output += '\n';
