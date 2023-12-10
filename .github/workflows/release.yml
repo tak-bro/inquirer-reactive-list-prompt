@@ -11,7 +11,7 @@ permissions: {}
 jobs:
     release:
         # IMPORTANT: prevent this action from running on forks
-        if: github.repository == 'tak-bro/inquirer-changeable-list'
+        if: github.repository == 'tak-bro/inquirer-reactive-list'
         permissions:
             contents: write
             pull-requests: write

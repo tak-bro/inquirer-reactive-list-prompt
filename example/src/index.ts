@@ -1,5 +1,5 @@
 import inquirer from 'inquirer';
-import ReactiveListPrompt, { ReactiveListChoice, ReactiveListLoader } from 'inquirer-reactive-list';
+import ReactiveListPrompt, { ReactiveListChoice, ReactiveListLoader } from 'inquirer-reactive-list-prompt';
 import { BehaviorSubject } from 'rxjs';
 
 const choices$: BehaviorSubject<ReactiveListChoice[]> = new BehaviorSubject<ReactiveListChoice[]>([]);

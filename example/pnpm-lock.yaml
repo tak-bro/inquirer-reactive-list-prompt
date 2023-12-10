@@ -8,9 +8,6 @@ dependencies:
   inquirer:
     specifier: ^9.0.3
     version: 9.2.12
-  inquirer-reactive-list:
-    specifier: file:inquirer-reactive-list-1.0.0.tgz
-    version: file:inquirer-reactive-list-1.0.0.tgz(inquirer@9.2.12)
   inquirer-reactive-list-prompt:
     specifier: file:inquirer-reactive-list-prompt-1.0.0.tgz
     version: file:inquirer-reactive-list-prompt-1.0.0.tgz(inquirer@9.2.12)
@@ -731,25 +728,8 @@ packages:
     engines: {node: '>=6'}
     dev: true
 
-  file:inquirer-reactive-list-1.0.0.tgz(inquirer@9.2.12):
-    resolution: {integrity: sha512-WIRpv1+GyWwNTnqeUItgwA/XOEboHAv4+CVQerE8/ZAwS9LqiUMI6o164QJc9dJZpGUIZ4syaosIajyZf70o7g==, tarball: file:inquirer-reactive-list-1.0.0.tgz}
-    id: file:inquirer-reactive-list-1.0.0.tgz
-    name: inquirer-reactive-list
-    version: 1.0.0
-    peerDependencies:
-      inquirer: ^9.0.3
-    dependencies:
-      chalk: 5.3.0
-      cli-cursor: 4.0.0
-      figures: 5.0.0
-      inquirer: 9.2.12
-      inquirer-autocomplete-prompt: 3.0.1(inquirer@9.2.12)
-      ora: 7.0.1
-      rxjs: 7.8.1
-    dev: false
-
   file:inquirer-reactive-list-prompt-1.0.0.tgz(inquirer@9.2.12):
-    resolution: {integrity: sha512-B6fSkPRojWw02H3ZZNXgbIyegHEe210Hw+905pE4dVEzKSCGrrwWkLcqQb6kMotkvstad1Ag1KiW54hXqjzIog==, tarball: file:inquirer-reactive-list-prompt-1.0.0.tgz}
+    resolution: {integrity: sha512-9UgXYclgxfp/z2CmY59YDesTaaQSGQD6nIqHwaN4em2iRRbOYnnLU1NlS5Ps0yBUCj75U6BfFhBmShMSISik6Q==, tarball: file:inquirer-reactive-list-prompt-1.0.0.tgz}
     id: file:inquirer-reactive-list-prompt-1.0.0.tgz
     name: inquirer-reactive-list-prompt
     version: 1.0.0

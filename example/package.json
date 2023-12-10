@@ -1,5 +1,5 @@
 {
-    "name": "inquirer-mutable-list-example",
+    "name": "inquirer-reactive-list-example",
     "version": "0.0.0",
     "main": "index.js",
     "type": "module",
@@ -19,7 +19,6 @@
     },
     "dependencies": {
         "inquirer": "^9.0.3",
-        "inquirer-reactive-list-prompt": "file:inquirer-reactive-list-prompt-1.0.0.tgz",
-        "inquirer-reactive-list": "file:inquirer-reactive-list-1.0.0.tgz"
+        "inquirer-reactive-list-prompt": "file:inquirer-reactive-list-prompt-1.0.0.tgz"
     }
 }
