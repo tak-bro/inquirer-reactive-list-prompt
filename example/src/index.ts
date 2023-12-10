@@ -6,6 +6,7 @@ const choices$: BehaviorSubject<ReactiveListChoice[]> = new BehaviorSubject<Reac
 const loader$: BehaviorSubject<MutableListLoader> = new BehaviorSubject<MutableListLoader>({
     isLoading: false,
     message: 'AI is analyzing...',
+    doneFrame: 'D',
 });
 
 inquirer.registerPrompt('reactiveListPrompt', ReactiveListPrompt);

@@ -16,6 +16,7 @@ import { listRender } from './utils/index.js';
 export interface MutableListLoader {
     isLoading: boolean;
     message?: string;
+    doneFrame?: string;
 }
 
 export type ReactiveListChoice = any;
@@ -73,6 +74,7 @@ class ReactiveListPrompt<T extends Answers> extends Base {
     private choices$: BehaviorSubject<ReactiveListChoice[]>;
     private spinner?: Ora;
     private isLoading: boolean = false;
+    private doneFrame: string = '✨';
 
     private firstRender: boolean = true;
     private selected: number = 0;
@@ -128,7 +130,7 @@ class ReactiveListPrompt<T extends Answers> extends Base {
             //     text: `${chalk.bold(chalk.green(message))}`
             // })
 
-            this.spinner.spinner = { interval: 0, frames: ['✨'] };
+            this.spinner.spinner = { interval: 0, frames: [this.doneFrame] };
 
             return this;
         }
@@ -323,6 +325,7 @@ class ReactiveListPrompt<T extends Answers> extends Base {
             .subscribe(loader => {
                 this.spinner = ora({ text: loader.message });
                 this.isLoading = loader.isLoading;
+                this.doneFrame = loader.doneFrame || this.doneFrame || '✨';
             });
     }
 }
