@@ -1,27 +1,60 @@
 {
-    "name": "inquirer-changeable-list",
+    "name": "inquirer-reactive-list-prompt",
     "version": "1.0.0",
-    "description": "inquirer prompt for changeable choices on list",
-    "main": "index.js",
-    "module": "dist/index.mjs",
-    "types": "dist/index.d.ts",
+    "description": "inquirer prompt for reactive choices on list",
+    "exports": "./dist/index.js",
+    "types": "./dist/index.d.ts",
+    "type": "module",
     "files": [
-        "/dist"
+        "dist"
     ],
     "scripts": {
-        "build": "tsup src/index.ts --format cjs,esm --dts",
+        "prepare": "husky install",
+        "clean": "rm -rf dist",
+        "build": "pnpm clean && tsup src/index.ts --format esm --dts",
         "release": "pnpm run build && changeset publish",
-        "test": "echo \"Error: no test specified\" && exit 1"
+        "test": "echo \"Error: no test specified\" && exit 1",
+        "fix:prettier": "prettier \"src/**/*.ts\" --write",
+        "fix:lint": "eslint src --ext .ts --fix",
+        "changeset": "npx changeset",
+        "changeset:version": "npx changeset version",
+        "pack:example": "pnpm build && pnpm pack && mv inquirer-reactive-list-prompt-1.0.0.tgz example",
+        "postpack:example": "cd example && pnpm install && pnpm start"
     },
     "keywords": [
         "inquirer",
-        "inquirer-dynamic-list"
+        "inquirer-dynamic-list",
+        "inquirer-reactive-list",
+        "inquirer-reactive-list-prompt"
     ],
     "author": "Hyungtak Jin",
     "license": "MIT",
     "devDependencies": {
         "@changesets/cli": "^2.26.2",
+        "@types/chalk": "^2.2.0",
+        "@types/inquirer": "^9.0.3",
+        "@types/inquirer-autocomplete-prompt": "^3.0.0",
+        "@types/node": "^20.4.5",
+        "@typescript-eslint/eslint-plugin": "^6.2.0",
+        "@typescript-eslint/parser": "^6.2.0",
+        "eslint": "^8.45.0",
+        "eslint-plugin-unused-imports": "^3.0.0",
+        "husky": "^8.0.0",
+        "inquirer": "^9.2.8",
+        "lint-staged": "^13.2.3",
+        "prettier": "^3.0.0",
         "tsup": "^7.1.0",
         "typescript": "^5.1.6"
+    },
+    "peerDependencies": {
+        "inquirer": "^9.0.3"
+    },
+    "dependencies": {
+        "chalk": "^5.3.0",
+        "cli-cursor": "^4.0.0",
+        "figures": "^5.0.0",
+        "inquirer-autocomplete-prompt": "^3.0.0",
+        "ora": "^7.0.0",
+        "rxjs": "^7.8.1"
     }
 }
