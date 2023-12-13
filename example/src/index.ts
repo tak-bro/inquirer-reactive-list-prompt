@@ -5,22 +5,18 @@ import { BehaviorSubject } from 'rxjs';
 const choices$: BehaviorSubject<ChoiceItem[]> = new BehaviorSubject<ChoiceItem[]>([]);
 const loader$: BehaviorSubject<ReactiveListLoader> = new BehaviorSubject<ReactiveListLoader>({
     isLoading: false,
-    message: 'AI is analyzing...',
+    message: 'fetch some items',
     // startOption: {
     //     color: 'red',
     //     spinner: 'triangle'
     // },
-    // stopOption: {
-    //     doneFrame: '✖',
-    //     color: 'red'
-    // }
 });
 
 inquirer.registerPrompt('reactiveListPrompt', ReactiveListPrompt);
 const mutableList = inquirer.prompt({
     type: 'reactiveListPrompt',
-    name: 'test',
-    message: 'Select AI message',
+    name: 'ReactiveListPrompt Example',
+    message: 'Select response',
     emptyMessage: 'Nothing to show',
     choices$,
     loader$,
@@ -33,30 +29,29 @@ mutableList.then((answer: any) => {
 });
 
 setTimeout(() => {
-    loader$.next({ isLoading: true });
     choices$.next([
         { name: 'test1', value: 'test1' },
+        { name: 'fetching...', value: 'test2' },
         new inquirer.Separator(),
-        { name: 'test2', value: 'test2' },
-        { name: 'test3', value: 'test3', disabled: true },
+        { name: 'fetching...', value: 'test3', disabled: true },
     ]);
-}, 2000);
+    loader$.next({ isLoading: true });
+}, 1000);
 
 setTimeout(() => {
     choices$.next([
-        { name: 'test4', value: 'test4' },
-        { name: 'test5', value: 'test5', disabled: true },
-        { name: 'test6', value: 'test6', disabled: true, isError: true },
+        { name: 'test1', value: 'test1' },
+        { name: 'test2', value: 'test2' },
+        new inquirer.Separator(),
+        { name: 'get error', value: 'error', disabled: true, isError: true },
     ]);
-}, 5000);
 
-setTimeout(() => {
     loader$.next({
         isLoading: false,
-        message: 'AI is analyzed',
-        // stopOption: {
-        //     doneFrame: '⚠', // '✖'
-        //     color: 'yellow' // 'red'
-        // }
+        message: 'get all responses',
+        stopOption: {
+            doneFrame: '⚠', // '✖'
+            color: 'yellow', // 'red'
+        },
     });
-}, 6000);
+}, 3000);
