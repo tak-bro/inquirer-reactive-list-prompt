@@ -729,7 +729,7 @@ packages:
     dev: true
 
   file:inquirer-reactive-list-prompt-1.0.0.tgz(inquirer@9.2.12):
-    resolution: {integrity: sha512-9UgXYclgxfp/z2CmY59YDesTaaQSGQD6nIqHwaN4em2iRRbOYnnLU1NlS5Ps0yBUCj75U6BfFhBmShMSISik6Q==, tarball: file:inquirer-reactive-list-prompt-1.0.0.tgz}
+    resolution: {integrity: sha512-/4LOowa4FuIHY9sH6Y50sRFJaN2Btsnc7nSF+zuuWIi4W/+o6/JRIOAMa8mSIo3GINc+XLH79p+pKbjYQf+ISg==, tarball: file:inquirer-reactive-list-prompt-1.0.0.tgz}
     id: file:inquirer-reactive-list-prompt-1.0.0.tgz
     name: inquirer-reactive-list-prompt
     version: 1.0.0

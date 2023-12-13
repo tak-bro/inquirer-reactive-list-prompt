@@ -1,8 +1,8 @@
 import inquirer from 'inquirer';
-import ReactiveListPrompt, { ReactiveListChoice, ReactiveListLoader } from 'inquirer-reactive-list-prompt';
+import ReactiveListPrompt, { ChoiceItem, ReactiveListLoader } from 'inquirer-reactive-list-prompt';
 import { BehaviorSubject } from 'rxjs';
 
-const choices$: BehaviorSubject<ReactiveListChoice[]> = new BehaviorSubject<ReactiveListChoice[]>([]);
+const choices$: BehaviorSubject<ChoiceItem[]> = new BehaviorSubject<ChoiceItem[]>([]);
 const loader$: BehaviorSubject<ReactiveListLoader> = new BehaviorSubject<ReactiveListLoader>({
     isLoading: false,
     message: 'AI is analyzing...',
