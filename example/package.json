@@ -19,6 +19,6 @@
     },
     "dependencies": {
         "inquirer": "^9.0.3",
-        "inquirer-reactive-list-prompt": "file:inquirer-reactive-list-prompt-1.0.0.tgz"
+        "inquirer-reactive-list-prompt": "file:inquirer-reactive-list-prompt-1.0.1.tgz"
     }
 }

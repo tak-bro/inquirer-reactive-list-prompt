@@ -1,62 +1,68 @@
 import inquirer from 'inquirer';
-import ReactiveListPrompt, { ReactiveListChoice, ReactiveListLoader } from 'inquirer-reactive-list-prompt';
+import ReactiveListPrompt, { ChoiceItem, ReactiveListLoader } from 'inquirer-reactive-list-prompt';
 import { BehaviorSubject } from 'rxjs';
 
-const choices$: BehaviorSubject<ReactiveListChoice[]> = new BehaviorSubject<ReactiveListChoice[]>([]);
+const choices$: BehaviorSubject<ChoiceItem[]> = new BehaviorSubject<ChoiceItem[]>([]);
 const loader$: BehaviorSubject<ReactiveListLoader> = new BehaviorSubject<ReactiveListLoader>({
     isLoading: false,
-    message: 'AI is analyzing...',
+    message: 'fetch some items',
     // startOption: {
     //     color: 'red',
     //     spinner: 'triangle'
     // },
-    // stopOption: {
-    //     doneFrame: '✖',
-    //     color: 'red'
-    // }
 });
 
 inquirer.registerPrompt('reactiveListPrompt', ReactiveListPrompt);
 const mutableList = inquirer.prompt({
     type: 'reactiveListPrompt',
-    name: 'test',
-    message: 'Select AI message',
-    emptyMessage: 'Nothing to show',
+    name: 'ReactiveListPrompt Example',
+    message: 'Select response',
+    emptyMessage: '⚠ Nothing to show',
     choices$,
     loader$,
 });
 
-mutableList.then((answer: any) => {
+mutableList.then(value => {
     choices$.complete();
     loader$.complete();
-    console.log('answer: ', answer);
+    console.log('answer: ', value);
 });
 
 setTimeout(() => {
-    loader$.next({ isLoading: true });
     choices$.next([
         { name: 'test1', value: 'test1' },
+        { name: 'fetching...', value: 'test2', disabled: true },
         new inquirer.Separator(),
-        { name: 'test2', value: 'test2' },
-        { name: 'test3', value: 'test3', disabled: true },
+        { name: 'fetching...', value: 'test3' },
     ]);
-}, 2000);
+    loader$.next({ isLoading: true });
+}, 1000);
 
 setTimeout(() => {
     choices$.next([
-        { name: 'test4', value: 'test4' },
-        { name: 'test5', value: 'test5', disabled: true },
-        { name: 'test6', value: 'test6', disabled: true, isError: true },
+        { name: 'test1', value: 'test1' },
+        { name: 'fetching...', value: 'test2' },
+        { name: 'get error', value: 'error', disabled: true, isError: true },
+        new inquirer.Separator(),
+        { name: 'example', value: 'test3', disabled: true },
     ]);
-}, 5000);
+}, 3000);
 
 setTimeout(() => {
+    choices$.next([
+        { name: 'test1', value: 'test1' },
+        { name: 'test2', value: 'test2' },
+        { name: 'get error', value: 'error', disabled: true, isError: true },
+        new inquirer.Separator(),
+        { name: 'test3', value: 'test3' },
+    ]);
+
     loader$.next({
         isLoading: false,
-        message: 'AI is analyzed',
+        message: 'get all responses',
         // stopOption: {
         //     doneFrame: '⚠', // '✖'
-        //     color: 'yellow' // 'red'
-        // }
+        //     color: 'yellow', // 'red'
+        // },
     });
 }, 6000);
