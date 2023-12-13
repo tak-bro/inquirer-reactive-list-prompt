@@ -1,7 +1,7 @@
 import chalk from 'chalk';
 import cliCursor from 'cli-cursor';
-import type { Question } from 'inquirer';
-import inquirer, { Answers, ListQuestionOptions } from 'inquirer';
+import type { ListQuestionOptions, Question, SeparatorOptions } from 'inquirer';
+import inquirer, { Answers } from 'inquirer';
 import Choices from 'inquirer/lib/objects/choices.js';
 import Base from 'inquirer/lib/prompts/base.js';
 import observe from 'inquirer/lib/utils/events.js';
@@ -25,60 +25,46 @@ export interface ReactiveListLoader {
     stopOption?: StopSpinnerOption;
 }
 
-// NOTE: type error on inquirer
-export type ReactiveListChoice = any;
-//
-// export interface ReactiveListPromptQuestionOptions<T extends Answers = Answers> extends Question<T> {
-//     type: "reactiveListPrompt";
-//     pageSize?: number;
-//     choices$?: BehaviorSubject<ReactiveListChoice[]>;
-//     loader$?: BehaviorSubject<MutableListLoader>;
-//     emptyMessage?: string;
-// }
+export type ReactiveListChoice = {
+    name?: string;
+    value: string;
+    description?: string;
+    disabled?: boolean | string;
+    type?: never;
+    id?: string;
+    checked?: boolean;
+    isError?: boolean;
+};
 
-// declare module 'inquirer' {
-//     interface QuestionMap<T> {
-//         reactiveListPrompt: ReactiveListPromptQuestionOptions;
-//     }
-// }
+export type ChoiceItem = ReactiveListChoice | SeparatorOptions;
 
 declare module 'inquirer' {
-    interface MutableListPromptOptions<T extends Answers = Answers> extends ListQuestionOptions<T> {}
+    interface ReactiveListPromptOptions<T extends Answers = Answers> extends ListQuestionOptions<T> {}
 
-    // interface MutableListPrompt<T extends Answers = Answers> extends MutableListPromptOptions<T> {
-    //     type: 'reactiveListPrompt';
-    //     choices$?: BehaviorSubject<ReactiveListChoice[]>;
-    //     loader$?: BehaviorSubject<MutableListLoader>;
-    //     emptyMessage?: string;
-    //     // fix for @types/inquirer
-    //     pageSize?: number;
-    // }
-
-    interface ReactiveListPromptQuestionOptions<T extends Answers = Answers> extends Question<T> {
+    interface ReactiveListPrompt<T extends Answers = Answers> extends ReactiveListPromptOptions<T> {
         type: 'reactiveListPrompt';
         pageSize?: number;
-        choices$?: BehaviorSubject<ReactiveListChoice[]>;
+        choices$?: BehaviorSubject<ChoiceItem[]>;
         loader$?: BehaviorSubject<ReactiveListLoader>;
         emptyMessage?: string;
     }
 
     interface QuestionMap<T extends Answers = Answers> {
-        reactiveListPrompt: ReactiveListPromptQuestionOptions<T>;
-        // mutableList: MutableListPrompt<T>;
+        reactiveListPrompt: ReactiveListPrompt<T>;
     }
 }
 
 class ReactiveListPrompt<T extends Answers> extends Base {
     declare opt: inquirer.prompts.PromptOptions & {
         pageSize: number;
-        choices$: BehaviorSubject<ReactiveListChoice[]>;
+        choices$: BehaviorSubject<ChoiceItem[]>;
         loader$: BehaviorSubject<ReactiveListLoader>;
         emptyMessage: string;
     };
 
     private emptyMessage: string;
     private loader$: BehaviorSubject<ReactiveListLoader>;
-    private choices$: BehaviorSubject<ReactiveListChoice[]>;
+    private choices$: BehaviorSubject<ChoiceItem[]>;
     private spinner?: Ora;
     private isLoading: boolean = false;
     private stopOption: StopSpinnerOption = {
@@ -94,6 +80,7 @@ class ReactiveListPrompt<T extends Answers> extends Base {
 
     constructor(question: Question, readLine: ReadLineInterface, answers: Answers) {
         super(question, readLine, answers);
+
         if (!this.opt.choices$ && !this.opt.choices) {
             this.throwParamError('choices');
         }
@@ -125,7 +112,6 @@ class ReactiveListPrompt<T extends Answers> extends Base {
         if (!this.spinner) {
             return;
         }
-        // do nothing
         if (this.isLoading === isLoading) {
             return;
         }
@@ -133,15 +119,7 @@ class ReactiveListPrompt<T extends Answers> extends Base {
         this.isLoading = isLoading;
         this.stopOption = loader.stopOption ? { ...this.stopOption, ...loader.stopOption } : this.stopOption;
         if (!this.isLoading) {
-            // this.spinner.indent = 0;
             this.spinner.text = `${chalk.bold(chalk[this.stopOption.color](message))}`;
-            // this.spinner.suffixText = `${chalk.bold(chalk.green(message))}`;
-
-            // this.spinner.stopAndPersist({
-            //     symbol: "✨",
-            //     text: `${chalk.bold(chalk.green(message))}`
-            // })
-
             this.spinner.color = this.stopOption.color;
             this.spinner.spinner = { interval: 0, frames: [this.stopOption.doneFrame] };
             return this;
@@ -150,11 +128,10 @@ class ReactiveListPrompt<T extends Answers> extends Base {
             return this;
         }
         this.spinner.start();
-        // this.render('AI is analyzing...')
         return this;
     }
 
-    setChoices(choices: ReactiveListChoice[]) {
+    setChoices(choices: ChoiceItem[]) {
         const hasNoChoices = !choices || choices.length === 0;
         if (hasNoChoices) {
             this.opt.choices = new Choices([], this.answers) as any;
@@ -178,9 +155,6 @@ class ReactiveListPrompt<T extends Answers> extends Base {
         validation.success.forEach(this.onSubmit.bind(this));
         validation.error.forEach(this.onError.bind(this));
 
-        // const addChoiceSubscription = this.addChoice$.subscribe(this.addChoice.bind(this));
-        // const removeChoiceSubscription = this.removeChoice$.subscribe(this.removeChoice.bind(this));
-        // this.subscriptions = [addChoiceSubscription, removeChoiceSubscription];
         const choicesSubscription = this.choices$.subscribe(this.setChoices.bind(this));
         this.subscriptions = [choicesSubscription];
         if (this.loader$) {
@@ -319,7 +293,7 @@ class ReactiveListPrompt<T extends Answers> extends Base {
         this.opt.choices$
             .asObservable()
             .pipe(take(1))
-            .subscribe((choices: ReactiveListChoice[]) => {
+            .subscribe((choices: ChoiceItem[]) => {
                 const hasNoChoices = !choices || choices.length === 0;
                 if (hasNoChoices) {
                     this.opt.choices = new Choices([], answers);

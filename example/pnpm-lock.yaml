@@ -9,8 +9,8 @@ dependencies:
     specifier: ^9.0.3
     version: 9.2.12
   inquirer-reactive-list-prompt:
-    specifier: file:inquirer-reactive-list-prompt-1.0.0.tgz
-    version: file:inquirer-reactive-list-prompt-1.0.0.tgz(inquirer@9.2.12)
+    specifier: file:inquirer-reactive-list-prompt-1.0.1.tgz
+    version: file:inquirer-reactive-list-prompt-1.0.1.tgz(inquirer@9.2.12)
 
 devDependencies:
   '@types/inquirer':
@@ -728,11 +728,11 @@ packages:
     engines: {node: '>=6'}
     dev: true
 
-  file:inquirer-reactive-list-prompt-1.0.0.tgz(inquirer@9.2.12):
-    resolution: {integrity: sha512-9UgXYclgxfp/z2CmY59YDesTaaQSGQD6nIqHwaN4em2iRRbOYnnLU1NlS5Ps0yBUCj75U6BfFhBmShMSISik6Q==, tarball: file:inquirer-reactive-list-prompt-1.0.0.tgz}
-    id: file:inquirer-reactive-list-prompt-1.0.0.tgz
+  file:inquirer-reactive-list-prompt-1.0.1.tgz(inquirer@9.2.12):
+    resolution: {integrity: sha512-NmBWNA3gpil5Cc0O2CV0ksjfkVmB369dI1/6IlcNJYNtLC2fzDyQIn+Sfht/H6psuIdEwp6VQyx43PR58Hr0aw==, tarball: file:inquirer-reactive-list-prompt-1.0.1.tgz}
+    id: file:inquirer-reactive-list-prompt-1.0.1.tgz
     name: inquirer-reactive-list-prompt
-    version: 1.0.0
+    version: 1.0.1
     peerDependencies:
       inquirer: ^9.0.3
     dependencies:
